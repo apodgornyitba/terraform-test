@@ -1,3 +1,8 @@
+# ----------------------------------------------------------------------------------
+# -------------------------------EJ1-NETWORKING-------------------------------------
+# ----------------------------------------------------------------------------------
+
+
 # resource "aws_subnet" "private" {
 #   vpc_id     = aws_vpc.main.id
 #   cidr_block = "10.0.1.0/24"
@@ -97,4 +102,70 @@ resource "aws_route_table_association" "rtb-assoc-1" {
   count          = length(var.public_subnet_cidr_suffixes)
   subnet_id      = aws_subnet.public-subnets[count.index].id
   route_table_id = aws_route_table.rtb-1.id
+}
+
+# ----------------------------------------------------------------------------------
+# -------------------------------EJ2-COMPUTE----------------------------------------
+# ----------------------------------------------------------------------------------
+
+resource "aws_instance" "pub-ec2-1" {
+  ami           = "ami-0022f774911c1d690"
+  subnet_id     = aws_subnet.public-subnets[0].id
+  instance_type = "t2.micro"
+  user_data     = <<-EOF
+              #!/bin/bash
+              yum install -y httpd
+              echo "<html><body><h1>Hello, World!</h1></body></html>" > /var/www/html/index.html
+              sed -i 's/Listen 80/Listen 0.0.0.0:80/' /etc/httpd/conf/httpd.conf
+              systemctl start httpd
+              systemctl enable httpd
+              EOF
+
+  tags = {
+    Name = "${var.ec2_instance_name}1"
+  }
+}
+
+resource "aws_instance" "pub-ec2-2" {
+  ami           = "ami-0022f774911c1d690"
+  subnet_id     = aws_subnet.public-subnets[1].id
+  instance_type = "t2.micro"
+  user_data     = <<-EOF
+              #!/bin/bash
+              yum install -y httpd
+              echo "<html><body><h1>Hello, World!</h1></body></html>" > /var/www/html/index.html
+              sed -i 's/Listen 80/Listen 0.0.0.0:80/' /etc/httpd/conf/httpd.conf
+              systemctl start httpd
+              systemctl enable httpd
+              EOF
+
+  tags = {
+    Name = "${var.ec2_instance_name}2"
+  }
+}
+
+resource "aws_security_group" "allow_tcp" {
+  name        = var.security_group_name
+  description = "Allow TCP traffic"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    description = "TCP from VPC"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = [aws_vpc.main.cidr_block, aws_subnet.public-subnets[0].cidr_block, aws_subnet.public-subnets[1].cidr_block]
+  }
+
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  tags = {
+    Name = var.security_group_name
+  }
 }

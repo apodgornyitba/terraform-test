@@ -28,6 +28,16 @@ variable "route_table_name" {
   type        = string
 }
 
+variable "ec2_instance_name" {
+  description = "Name of the EC2 instance"
+  type        = string
+}
+
+variable "security_group_name" {
+  description = "Name of the security group"
+  type        = string
+}
+
 variable "public_subnet_cidr_base" {
   type        = string
   description = "Base CIDR block for public subnets"

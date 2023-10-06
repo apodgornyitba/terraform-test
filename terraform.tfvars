@@ -1,0 +1,5 @@
+bucket_name           = "itba-cloud-2023"
+vpc_name              = "vpc-1"
+subnet_name           = "pub-"
+internet_gateway_name = "igw-1"
+route_table_name      = "rtb-1"
